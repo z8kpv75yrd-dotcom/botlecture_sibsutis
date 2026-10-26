@@ -58,7 +58,7 @@ const val = id => document.getElementById(id).value;
 let me = null, st = {tab: "marks", gid: null, date: null, lesson: null, open: null, regGid: null};
 
 // ВСТАВЬТЕ сюда адрес веб-приложения Google Apps Script (оканчивается на /exec)
-const API_URL = "https://script.google.com/macros/s/AKfycbxDcMAFLKpHRvO4obgApDuTyB6ZbbQV6vxoVN9P6B_vqHp6ZcrjjJrbRGsqOCes6ymK/exec";
+const API_URL = "PASTE_APPS_SCRIPT_URL_HERE";
 
 async function api(a, b = {}) {
   // Content-Type не задаём (text/plain) — так браузер не делает preflight-запрос, который Apps Script не поддерживает
@@ -150,6 +150,10 @@ function ownerGroups(){
       <h2 style="font-size:15px">Расписание</h2>
       <input id="iu" placeholder="${me.tpl ? "Ссылка ICS (пусто — взять по названию группы)" : "Ссылка на ICS-календарь"}" value="${esc(x.url)}">
       <button class="b main" data-a="imp" data-id="${x.id}">Загрузить расписание</button>
+      <h2 style="font-size:15px">Вставить список пар</h2>
+      <textarea id="pt" placeholder="Вставьте расписание целиком: заголовки дней и строки пар"></textarea>
+      <button class="b main" data-a="impText" data-id="${x.id}">Распределить по дням</button>
+      <p class="hint" style="margin:6px 0 8px">Повторная вставка не создаёт дубли — пары обновляются</p>
       <h2 style="font-size:15px">Добавить пару вручную</h2>
       <input id="ld" type="date" value="${st.date}"><div class="row"><input id="ls" type="time" value="09:00"><input id="le" type="time" value="10:30"></div>
       <input id="lt" placeholder="Предмет"><input id="lp" placeholder="Преподаватель"><input id="lr" placeholder="Аудитория">
@@ -184,6 +188,7 @@ const A = {
   sDel: d => { if (confirm("Удалить студента?")) safe(async () => { await api("student_del", {student_id: +d.id}); render(); }); },
   sUnlink: d => safe(async () => { await api("student_unlink", {student_id: +d.id}); render(); }),
   imp: d => safe(async () => { toast("Загружаю…"); const r = await api("import", {group_id: +d.id, url: val("iu")}); toast("Загружено пар: " + r.imported); render(); }),
+  impText: d => safe(async () => { const r = await api("import_text", {group_id: +d.id, text: val("pt")}); toast("Добавлено: " + r.added + ", обновлено: " + r.updated + (r.removed ? ", убрано: " + r.removed : "")); render(); }),
   lAdd: d => safe(async () => { await api("lesson_add", {group_id: +d.id, date: val("ld"), start: val("ls"), end: val("le"), title: val("lt"), teacher: val("lp"), room: val("lr")}); toast("Пара добавлена"); render(); }),
 };
 app.addEventListener("click", e => { const t = e.target.closest("[data-a]"); if (t && t.tagName != "SELECT" && A[t.dataset.a] && !t.disabled) A[t.dataset.a](t.dataset); });
